@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
 	Network net = Network();
 	cin >> net;
 	cout << "==================================================" << endl;
-	cout << "=== Neural Net ===================================" << endl;
+	cout << "=== Neural Net Simulation ========================" << endl;
 	cout << "==================================================" << endl;
 	net.evalTraverse();
 	cout << net;

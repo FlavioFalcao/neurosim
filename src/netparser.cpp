@@ -3,11 +3,8 @@
  * Colby Horn
  */
  
-#include <istream>
-#include <ostream>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 #include "neurosim.hpp"
 
@@ -18,23 +15,23 @@ namespace neuro {
 ostream& operator<<(ostream& stream, Network& net) {
 	for (Network::iterator neuron = net.begin(); 
 			neuron != net.end(); ++neuron) {
-		if ((*neuron)->getType() == INTERNAL)
+		if (neuron->getType() == INTERNAL)
 			stream << "neuron";
-		else if ((*neuron)->getType() == INPUT)
+		else if (neuron->getType() == INPUT)
 			stream << "input";
-		else if ((*neuron)->getType() == OUTPUT)
+		else if (neuron->getType() == OUTPUT)
 			stream << "output";
-		stream << " " << (*neuron)->getId() << endl;
-		if ((*neuron)->getActivation() != 0.0)
-			stream << "\tactivation " << (*neuron)->getActivation() << endl;
-		if ((*neuron)->getBias() != 0.0)
-			stream << "\tbias " << (*neuron)->getBias() <<endl;
-		for (Neuron::iterator synapse = (*neuron)->inputs_begin();
-				synapse != (*neuron)->inputs_end(); ++synapse)
+		stream << " " << neuron->getId() << endl;
+		if (neuron->getActivation() != 0.0)
+			stream << "\tactivation " << neuron->getActivation() << endl;
+		if (neuron->getBias() != 0.0)
+			stream << "\tbias " << neuron->getBias() <<endl;
+		for (Neuron::iterator synapse = neuron->inputs_begin();
+				synapse != neuron->inputs_end(); ++synapse)
 			stream << "synapse" << endl <<
-					"\tsource " << (*synapse)->getSource()->getId() << endl <<
-					"\ttarget " << (*synapse)->getTarget()->getId() << endl <<
-					"\tweight " << (*synapse)->getSource()->getId() << endl;
+					"\tsource " << synapse->getSource().getId() << endl <<
+					"\ttarget " << synapse->getTarget().getId() << endl <<
+					"\tweight " << synapse->getWeight() << endl;
 	}
 	return stream;
 }
@@ -64,7 +61,7 @@ istream& operator>>(istream& stream, Network& net) {
 					stream >> bias;
 				stream >> str_in;
 			}
-			if (net[id] != NULL)
+			if (net.contains(id))
 				throw runtime_error("redefinition of id: " + to_string(id));
 			else
 				net.add(id, type, activation, bias);
@@ -82,14 +79,14 @@ istream& operator>>(istream& stream, Network& net) {
 					stream >> weight;
 				stream >> str_in;
 			}
-			if (net[source] == NULL)
+			if (!net.contains(source))
 				throw runtime_error("undefined connection source: " + 
 						to_string(source));
-			else if (net[target] == NULL)
+			else if (!net.contains(target))
 				throw runtime_error("undefined connection target: " + 
 						to_string(target));
 			else
-				net[source]->connect(net[target], weight);
+				net[source].connect(net[target], weight);
 		} else
 			throw runtime_error("parse error on token: " + str_in); 
 	}

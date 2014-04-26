@@ -11,6 +11,9 @@
 #include <vector>
 #include <map>
 
+#include <boost/function.hpp>
+#include <boost/iterator/transform_iterator.hpp>
+
 #include "neuron.hpp"
 
 namespace neuro {
@@ -19,9 +22,12 @@ class Network {
 friend std::ostream& operator<<(std::ostream&, Network&);
 friend std::istream& operator>>(std::istream&, Network&);
 public:
-	typedef std::vector<Neuron*>::iterator iterator;
+	typedef boost::transform_iterator<boost::function<Neuron& (Neuron*)>, 
+			std::vector<Neuron*>::iterator> iterator;
 	void     add(int, NeuronType, float = 0.0);
 	void     add(int, NeuronType, float, float);
+	bool     contains(int id);
+	Neuron&  operator[](int id);
 	void     erase(int);
 	void     clear();
 	iterator begin();
@@ -30,7 +36,6 @@ public:
 	iterator inputs_end();
 	iterator outputs_begin();
 	iterator outputs_end();
-	Neuron*  operator[](int id);
 	void     evalTraverse();
 private:
 	std::vector<Neuron*>   neurons, inputs, outputs;

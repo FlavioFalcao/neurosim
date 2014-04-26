@@ -1,17 +1,15 @@
 /*
- * NeuroSim Library Network Source
+ * NeuroSim Library Core Network Source
  * Colby Horn
  */
 
-#include <istream>
-#include <ostream>
-#include <vector>
 #include <queue>
-#include <map>
+#include <stdexcept>
 
 #include "neurosim.hpp"
 
 using namespace std;
+using namespace boost;
 
 namespace neuro {
 
@@ -23,7 +21,7 @@ void Network::add(int id, NeuronType type, float arg) {
 }
 
 void Network::add(int id, NeuronType type, float activation, float bias) {
-	if (neuron_table.find(id) == neuron_table.end()) {
+	if (!contains(id)) {
 		Neuron* neuron = new Neuron(id, type, activation, bias);
 		neuron_table[id] = neuron;
 		neurons.push_back(neuron);
@@ -34,8 +32,19 @@ void Network::add(int id, NeuronType type, float activation, float bias) {
 	}
 }
 
-Network::iterator findById(vector<Neuron*>& neurons, int id) {
-	Network::iterator neuron = neurons.begin();
+bool Network::contains(int id) {
+	return neuron_table.find(id) != neuron_table.end();
+}
+
+Neuron& Network::operator[](int id) {
+	if (contains(id))
+		return *neuron_table[id];
+	else
+		throw out_of_range("method Network::operator[] received out of range id");
+}
+
+vector<Neuron*>::iterator findById(vector<Neuron*>& neurons, int id) {
+	vector<Neuron*>::iterator neuron = neurons.begin();
 	while ((*neuron)->getId() != id && neuron != neurons.end()) ++neuron;
 	return neuron;
 }
@@ -43,7 +52,7 @@ Network::iterator findById(vector<Neuron*>& neurons, int id) {
 void Network::erase(int id) {
 	if (neuron_table.find(id) != neuron_table.end()) {
 		neuron_table.erase(id);
-		Network::iterator location = findById(neurons, id);
+		vector<Neuron*>::iterator location = findById(neurons, id);
 		Neuron* neuron = *location;
 		neurons.erase(location);
 		if (neuron->getType() == INPUT) {
@@ -64,30 +73,27 @@ void Network::clear() {
 	neuron_table.clear();
 }
 
-Network::iterator Network::begin() { return neurons.begin(); }
-Network::iterator Network::end() { return neurons.end(); }
-Network::iterator Network::inputs_begin() { return inputs.begin(); }
-Network::iterator Network::inputs_end() { return inputs.end(); }
-Network::iterator Network::outputs_begin() { return outputs.begin(); }
-Network::iterator Network::outputs_end() { return outputs.end(); }
-
-Neuron* Network::operator[](int id) {
-	if (neuron_table.find(id) != neuron_table.end())
-		return neuron_table[id];
-	else
-		return NULL;
+Network::iterator deref(vector<Neuron*>::iterator itr) {
+	return make_transform_iterator(itr, &dereference<Neuron>);
 }
+
+Network::iterator Network::begin() { return deref(neurons.begin()); }
+Network::iterator Network::end() { return deref(neurons.end()); }
+Network::iterator Network::inputs_begin() { return deref(inputs.begin()); }
+Network::iterator Network::inputs_end() { return deref(inputs.end()); }
+Network::iterator Network::outputs_begin() { return deref(outputs.begin()); }
+Network::iterator Network::outputs_end() { return deref(outputs.end()); }
 
 void Network::evalTraverse() {
 	queue<Neuron*> frontier;
 	for (iterator input = inputs_begin(); input != inputs_end(); ++input)
-		frontier.push(*input);
+		frontier.push(&*input);
 	while (!frontier.empty()) {
 		Neuron* neuron = frontier.front();
 		neuron->evalActivation();
 		for (Neuron::iterator child = neuron->outputs_begin(); 
 				child != neuron->outputs_end(); ++child)
-			frontier.push((*child)->getTarget());
+			frontier.push(&child->getTarget());
 		frontier.pop();
 	}
 }

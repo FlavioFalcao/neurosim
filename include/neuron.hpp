@@ -10,6 +10,9 @@
 #include <string>
 #include <vector>
 
+#include <boost/function.hpp>
+#include <boost/iterator/transform_iterator.hpp>
+
 #include "synapse.hpp"
 
 namespace neuro {
@@ -28,7 +31,8 @@ inline std::string getNeuronTypeText(const NeuronType& type) {
 class Neuron {
 friend std::ostream& operator<<(std::ostream&, const Neuron&);
 public:
-	typedef std::vector<Synapse*>::iterator iterator;
+	typedef boost::transform_iterator<boost::function<Synapse& (Synapse*)>, 
+			std::vector<Synapse*>::iterator> iterator;
 	Neuron(int = 0, NeuronType = INTERNAL, float = 0.0, float = 0.0);
 	int        getId() const;
 	NeuronType getType() const;
@@ -40,8 +44,8 @@ public:
 	iterator   inputs_end();
 	iterator   outputs_begin();
 	iterator   outputs_end();
-	void       connect(Neuron*, float);
-	void       disconnect(Neuron*);
+	void       connect(Neuron&, float);
+	void       disconnect(Neuron&);
 private:
 	int                   id;
 	NeuronType            type;

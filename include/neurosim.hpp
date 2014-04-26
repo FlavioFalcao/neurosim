@@ -6,8 +6,8 @@
 #ifndef __NeuroSim__
 #define __NeuroSim__
 
-#include <ostream>
-#include <vector>
+template <typename T>
+T& dereference(T* pointer)  { return *pointer; }
 
 #include "network.hpp"
 #include "neuron.hpp"

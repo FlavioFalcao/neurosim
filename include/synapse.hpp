@@ -15,15 +15,15 @@ class Neuron;
 class Synapse {
 friend std::ostream& operator<<(std::ostream&, const Synapse&);
 public:
-	Synapse(Neuron*, float, Neuron*);
-	Neuron* getSource() const;
-	float	getWeight() const;
-	void	setWeight(float);
-	Neuron* getTarget() const;
+	Synapse(Neuron&, float, Neuron&);
+	Neuron& getSource() const;
+	float   getWeight() const;
+	void    setWeight(float);
+	Neuron& getTarget() const;
 private:
-	Neuron* source;
-	float	weight;
-	Neuron* target;
+	Neuron& source;
+	float   weight;
+	Neuron& target;
 };
 
 }

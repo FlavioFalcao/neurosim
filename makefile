@@ -24,17 +24,17 @@ SRC=$(wildcard $(SRCDIR)/*.cpp)
 OBJ=$(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SRC))
 BIN=$(BINDIR)/neurosim
 
-all : $(BIN)
+binary: $(BIN)
 
-$(BIN) : $(OBJ)
+$(BIN): $(OBJ)
 	mkdir -p $(BINDIR)
 	$(CC) $(LDFLAGS) $(OBJ) -o $@
 
-$(OBJDIR)/%.o : $(SRCDIR)/%.cpp $(HEAD)
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(HEAD)
 	mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-clean :
+clean:
 	rm $(BIN)
 	rmdir $(BINDIR)
 	rm $(OBJ)
