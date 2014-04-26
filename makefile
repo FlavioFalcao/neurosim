@@ -15,28 +15,51 @@ else
 $(error unknown operating system detected '$(OS)')
 endif
 
+HEAD=$(wildcard include/*.hpp)
+
 SRCDIR=src
 OBJDIR=obj
-BINDIR=bin
 
-HEAD=$(wildcard include/*.hpp)
-SRC=$(wildcard $(SRCDIR)/*.cpp)
-OBJ=$(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SRC))
+LIBDIR=lib
+LIBSRC=$(wildcard $(SRCDIR)/$(LIBDIR)/*.cpp)
+LIBOBJ=$(patsubst $(SRCDIR)/$(LIBDIR)/%.cpp,$(OBJDIR)/$(LIBDIR)/%.o,$(LIBSRC))
+LIB=$(LIBDIR)/libneurosim.so
+
+BINDIR=bin
+BINSRC=$(wildcard $(SRCDIR)/*.cpp)
+BINOBJ=$(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(BINSRC))
 BIN=$(BINDIR)/neurosim
 
-binary: $(BIN)
+all: binary library
 
-$(BIN): $(OBJ)
-	mkdir -p $(BINDIR)
-	$(CC) $(LDFLAGS) $(OBJ) -o $@
+binary: library $(BIN)
+
+$(BIN): $(BINOBJ)
+	@ mkdir -p $(BINDIR)
+	$(CC) $(LDFLAGS) -Wl,-rpath=lib -Llib -lneurosim $^ -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(HEAD)
-	mkdir -p $(OBJDIR)
+	@ mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+library: $(LIB)
+
+$(LIB): $(LIBOBJ)
+	@ mkdir -p $(LIBDIR)
+	$(CC) $(LDFLAGS) -shared $^ -o $@
+
+$(OBJDIR)/$(LIBDIR)/%.o: $(SRCDIR)/$(LIBDIR)/%.cpp $(HEAD)
+	@ mkdir -p $(OBJDIR)/$(LIBDIR)
+	$(CC) $(CFLAGS) -fPIC -c $< -o $@
+
 clean:
-	rm $(BIN)
-	rmdir $(BINDIR)
-	rm $(OBJ)
-	rmdir $(OBJDIR)
+	- rm $(LIB)
+	- rmdir $(LIBDIR)
+	- rm $(LIBOBJ)
+	- rmdir $(OBJDIR)/$(LIBDIR)
+	- rm $(BIN)
+	- rmdir $(BINDIR)
+	- rm $(BINOBJ)
+	- rmdir $(OBJDIR)
+
 
