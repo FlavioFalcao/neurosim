@@ -40,8 +40,8 @@ public:
 	void       setActivation(float);
 	float      evalActivation();
 	float      getBias() const;
-	iterator   inputs_begin();
-	iterator   inputs_end();
+	iterator   begin();
+	iterator   end();
 	iterator   outputs_begin();
 	iterator   outputs_end();
 	void       connect(Neuron&, float);

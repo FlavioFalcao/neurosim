@@ -26,8 +26,8 @@ ostream& operator<<(ostream& stream, Network& net) {
 			stream << "\tactivation " << neuron->getActivation() << endl;
 		if (neuron->getBias() != 0.0)
 			stream << "\tbias " << neuron->getBias() <<endl;
-		for (Neuron::iterator synapse = neuron->inputs_begin();
-				synapse != neuron->inputs_end(); ++synapse)
+		for (Neuron::iterator synapse = neuron->begin();
+				synapse != neuron->end(); ++synapse)
 			stream << "synapse" << endl <<
 					"\tsource " << synapse->getSource().getId() << endl <<
 					"\ttarget " << synapse->getTarget().getId() << endl <<

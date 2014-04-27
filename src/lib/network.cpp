@@ -13,6 +13,10 @@ using namespace boost;
 
 namespace neuro {
 
+void Network::add(int id, NeuronType type) {
+	add(id, type, 0.0, 0.0);
+}
+
 void Network::add(int id, NeuronType type, float arg) {
 	if (type == INPUT)
 		add(id, type, arg, 0.0);

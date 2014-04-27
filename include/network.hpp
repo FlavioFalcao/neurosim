@@ -24,7 +24,8 @@ friend std::istream& operator>>(std::istream&, Network&);
 public:
 	typedef boost::transform_iterator<boost::function<Neuron& (Neuron*)>, 
 			std::vector<Neuron*>::iterator> iterator;
-	void     add(int, NeuronType, float = 0.0);
+	void     add(int, NeuronType);
+	void     add(int, NeuronType, float);
 	void     add(int, NeuronType, float, float);
 	bool     contains(int id);
 	Neuron&  operator[](int id);

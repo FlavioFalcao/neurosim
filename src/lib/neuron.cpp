@@ -29,8 +29,8 @@ void Neuron::setActivation(float activation) {
 float Neuron::evalActivation() {
 	if (type != INPUT) {
 		activation = getBias();
-		for (iterator synapse = inputs_begin(); 
-				synapse != inputs_end(); ++synapse)
+		for (iterator synapse = begin(); 
+				synapse != end(); ++synapse)
 			activation += synapse->getWeight() * 
 					synapse->getSource().getActivation();
 	}
@@ -43,8 +43,8 @@ Neuron::iterator deref(vector<Synapse*>::iterator itr) {
 	return make_transform_iterator(itr, &dereference<Synapse>);
 }
 
-Neuron::iterator Neuron::inputs_begin() { return deref(inputs.begin()); }
-Neuron::iterator Neuron::inputs_end() {	return deref(inputs.end()); }
+Neuron::iterator Neuron::begin() { return deref(inputs.begin()); }
+Neuron::iterator Neuron::end() {	return deref(inputs.end()); }
 Neuron::iterator Neuron::outputs_begin() { return deref(outputs.begin()); }
 Neuron::iterator Neuron::outputs_end() { return deref(outputs.end()); }
 
