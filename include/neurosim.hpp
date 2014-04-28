@@ -3,11 +3,8 @@
  * Colby Horn
  */
 
-#ifndef __NeuroSim__
-#define __NeuroSim__
-
-template <typename T>
-T& dereference(T* pointer)  { return *pointer; }
+#ifndef __NEUROSIM__
+#define __NEUROSIM__
 
 #include "network.hpp"
 #include "neuron.hpp"

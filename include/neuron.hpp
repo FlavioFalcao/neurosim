@@ -3,16 +3,13 @@
  * Colby Horn
  */
 
-#ifndef __Neuron__
-#define __Neuron__
+#ifndef __NEURON__
+#define __NEURON__
 
 #include <ostream>
 #include <string>
-#include <vector>
 
-#include <boost/function.hpp>
-#include <boost/iterator/transform_iterator.hpp>
-
+#include "container.hpp"
 #include "synapse.hpp"
 
 namespace neuro {
@@ -28,29 +25,42 @@ inline std::string getNeuronTypeText(const NeuronType& type) {
 	return text[type];
 }
 
-class Neuron {
-friend std::ostream& operator<<(std::ostream&, const Neuron&);
+class neuron {
+friend std::ostream& operator<<(std::ostream&, const neuron&);
 public:
-	typedef boost::transform_iterator<boost::function<Synapse& (Synapse*)>, 
-			std::vector<Synapse*>::iterator> iterator;
-	Neuron(int = 0, NeuronType = INTERNAL, float = 0.0, float = 0.0);
-	int        getId() const;
-	NeuronType getType() const;
-	float      getActivation() const;
-	void       setActivation(float);
-	float      evalActivation();
-	float      getBias() const;
-	iterator   begin();
-	iterator   end();
-	iterator   outputs_begin();
-	iterator   outputs_end();
-	void       connect(Neuron&, float);
-	void       disconnect(Neuron&);
+	typedef const synapse&                       const_reference;
+	typedef shared_ptr_vector<synapse>::iterator iterator;
+	typedef synapse&                             reference;
+	typedef unsigned int                         size_type;
+	typedef synapse                              value_type;
+	
+	neuron(int, NeuronType = INTERNAL, float = 0.0, float = 0.0);
+	
+	float           activation() const;
+	void            activation(float);
+	float           bias() const;
+	iterator        begin();
+	void            connect(neuron&, float = 1.0);
+	void            disconnect(neuron&);
+	float           eval();
+	iterator        end();
+	int             id() const;
+	reference       operator[](size_type);
+	const_reference operator[](size_type) const;
+	bool            operator==(const neuron&) const;
+	bool            operator!=(const neuron&) const;
+	iterator        outputs_begin();
+	iterator        outputs_end();
+	size_type       size() const;
+	std::string     to_string() const;
+	NeuronType      type() const;
+	
 private:
-	int                   id;
-	NeuronType            type;
-	float                 activation, bias;
-	std::vector<Synapse*> inputs, outputs;
+	int                             id_;
+	NeuronType                      type_;
+	float                           activation_, bias_;
+	shared_ptr_vector<value_type>   inputs_, outputs_;
+	shared_ptr_map<int, value_type> inputs_table_, outputs_table_;
 };
 
 }

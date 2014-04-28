@@ -3,27 +3,44 @@
  * Colby Horn
  */
 
-#ifndef __Synapse__
-#define __Synapse__
+#ifndef __SYNAPSE__
+#define __SYNAPSE__
 
 #include <ostream>
+#include <string>
 
 namespace neuro {
 
-class Neuron;
+class neuron;
 
-class Synapse {
-friend std::ostream& operator<<(std::ostream&, const Synapse&);
+class synapse {
+friend std::ostream& operator<<(std::ostream&, const synapse&);
+
 public:
-	Synapse(Neuron&, float, Neuron&);
-	Neuron& getSource() const;
-	float   getWeight() const;
-	void    setWeight(float);
-	Neuron& getTarget() const;
+	typedef const neuron& const_reference;
+	typedef neuron&       reference;
+	typedef unsigned char size_type;
+	typedef neuron        value_type;
+	
+	synapse(reference, float, reference);
+	
+	reference       destination();
+	const_reference destination() const;
+	reference       operator[](size_type);
+	const_reference operator[](size_type) const;
+	bool            operator==(const synapse&) const;
+	bool            operator!=(const synapse&) const;
+	size_type       size() const;
+	reference       source();
+	const_reference source() const;
+	std::string     to_string() const;
+	float           weight() const;
+	void            weight(float);
+
 private:
-	Neuron& source;
-	float   weight;
-	Neuron& target;
+	reference source_;
+	float     weight_;
+	reference destination_;
 };
 
 }

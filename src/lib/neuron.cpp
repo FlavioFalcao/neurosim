@@ -3,96 +3,111 @@
  * Colby Horn
  */
 
+#include <sstream>
 #include <stdexcept>
 
-#include "neurosim.hpp"
+#include "neuron.hpp"
+#include "synapse.hpp"
 
 using namespace std;
-using namespace boost;
 
 namespace neuro {
 
-Neuron::Neuron(int id, NeuronType type, float activation, float bias): 
-		id(id), type(type), activation(activation), bias(bias) {}
+neuron::neuron(int id, NeuronType type, float activation, float bias) : 
+		id_(id), type_(type), activation_(activation), bias_(bias) {}
 
-int Neuron::getId() const { return id; }
-NeuronType Neuron::getType() const { return type; }
-float Neuron::getActivation() const { return activation; }
+float neuron::activation() const { return activation_; }
 
-void Neuron::setActivation(float activation) {
-	if (type == INPUT)
-		this->activation = activation;
-	else
-		throw runtime_error("method Neuron::setActivation may only be called if Neuron::type == INPUT");
+void neuron::activation(float activation) {
+	if (type() == INPUT) {
+		this->activation_ = activation;
+	} else {
+		throw runtime_error("neuron::activation: neuron::type != INPUT");
+	}
 }
 
-float Neuron::evalActivation() {
-	if (type != INPUT) {
-		activation = getBias();
+float neuron::bias() const { return bias_; }
+
+neuron::iterator neuron::begin() { return inputs_.begin(); }
+
+void neuron::connect(neuron& target, float weight) {
+	if (type() != OUTPUT) {
+		if (!outputs_table_.contains(target.id())) {
+			
+			// TODO update declaration/initialization with shared_ptr_vector/shared_ptr_map update
+			shared_ptr<synapse> s(new synapse(*this, weight, target));
+			
+			this->outputs_.push_back(s);
+			this->outputs_table_.insert(target.id(), s);
+			target.inputs_.push_back(s);
+			target.inputs_table_.insert(this->id(), s);
+		} else {
+			ostringstream stream;
+			stream << "neuron::connect: <neurons id " << this->id() << 
+					", ...> already connected to <neuron id " << target.id() << ", ...>";
+			throw runtime_error(stream.str());
+		}
+	} else {
+		throw runtime_error("neuron::connect: neuron::type == OUTPUT");
+	}
+}
+
+void neuron::disconnect(neuron& target) {
+	if (type() != OUTPUT) {
+		if (outputs_table_.contains(target.id())) {
+			synapse& s = outputs_table_[target.id()];
+			this->outputs_.erase(s);
+			this->outputs_table_.erase(target.id());
+			target.inputs_.erase(s);
+			target.inputs_table_.erase(this->id());
+		} else {
+			ostringstream stream;
+			stream << "neuron::disconnect: <neurons id " << this->id() << 
+					", ...> is not connected to <neuron id " << target.id() << ", ...>";
+			throw runtime_error(stream.str());
+		}
+	} else
+		throw runtime_error("neuron::disconnect: neuron::type == OUTPUT");
+}
+
+float neuron::eval() {
+	if (type() != INPUT) {
+		activation_ = bias();
 		for (iterator synapse = begin(); 
 				synapse != end(); ++synapse)
-			activation += synapse->getWeight() * 
-					synapse->getSource().getActivation();
+			activation_ += synapse->weight() * 
+					synapse->source().activation();
 	}
-	return activation;
+	return activation_;
 }
 
-float Neuron::getBias() const { return bias; }
+neuron::iterator neuron::end() { return inputs_.end(); }
 
-Neuron::iterator deref(vector<Synapse*>::iterator itr) {
-	return make_transform_iterator(itr, &dereference<Synapse>);
+int neuron::id() const { return id_; }
+
+neuron::reference neuron::operator[](neuron::size_type n) { return inputs_[n]; }
+neuron::const_reference neuron::operator[](neuron::size_type n) const { return inputs_[n]; }
+
+bool neuron::operator==(const neuron& n) const { return id() == n.id(); }
+bool neuron::operator!=(const neuron& n) const { return !(*this == n); }
+
+ostream& operator<<(ostream& stream, const neuron& neuron) {
+	return stream << "<neuron id " << neuron.id() << ", type " << getNeuronTypeText(neuron.type()) <<
+			", activation " << neuron.activation() << ", bias " << neuron.bias() << ">";
 }
 
-Neuron::iterator Neuron::begin() { return deref(inputs.begin()); }
-Neuron::iterator Neuron::end() {	return deref(inputs.end()); }
-Neuron::iterator Neuron::outputs_begin() { return deref(outputs.begin()); }
-Neuron::iterator Neuron::outputs_end() { return deref(outputs.end()); }
+neuron::iterator neuron::outputs_begin() { return outputs_.begin(); }
+neuron::iterator neuron::outputs_end() { return outputs_.end(); }
 
-vector<Synapse*>::iterator findSynapseBySource(vector<Synapse*>& synapses, 
-		Neuron& source) {
-	vector<Synapse*>::iterator syn = synapses.begin();
-	while (syn != synapses.end() && &(*syn)->getSource() != &source) ++syn;
-	return syn;
+neuron::size_type neuron::size() const { return inputs_.size(); }
+
+string neuron::to_string() const {
+	ostringstream stream;
+	stream << *this;
+	return stream.str();
 }
 
-vector<Synapse*>::iterator findSynapseByTarget(vector<Synapse*>& synapses, 
-		Neuron& target) {
-	vector<Synapse*>::iterator syn = synapses.begin();
-	while (syn != synapses.end() && &(*syn)->getTarget() != &target) ++syn;
-	return syn;
-}
-
-void Neuron::connect(Neuron& target, float weight) {
-	if (type != OUTPUT) {
-		if (findSynapseByTarget(outputs, target) == outputs.end()) {
-			Synapse* synapse = new Synapse(*this, weight, target);
-			this->outputs.push_back(synapse);
-			target.inputs.push_back(synapse);
-		}
-	} else
-		throw runtime_error("method Neuron::connect may only be called if Neuron::type != OUTPUT");
-}
-
-void Neuron::disconnect(Neuron& target) {
-	vector<Synapse*>::iterator 
-			outputs_itr = findSynapseByTarget(this->outputs, target),
-			inputs_itr = findSynapseBySource(target.inputs, *this);
-	if (type != OUTPUT) {
-		if (outputs_itr != outputs.end()) {
-			Synapse* synapse = *outputs_itr;
-			this->outputs.erase(outputs_itr);
-			target.inputs.erase(inputs_itr);
-			delete synapse;
-		}
-	} else
-		throw runtime_error("method Neuron::disconnect may only be called if Neuron::type != OUTPUT");
-}
-
-ostream& operator<<(ostream& stream, const Neuron& neuron) {
-	return stream << "Neuron id=" << neuron.id << 
-			" type=" << getNeuronTypeText(neuron.type) <<
-			" activation=" << neuron.activation << " bias=" << neuron.bias;
-}
+NeuronType neuron::type() const { return type_; }
 
 }
 

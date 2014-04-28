@@ -2,91 +2,107 @@
  * NeuroSim Library Network Parsing Source
  * Colby Horn
  */
- 
+
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
-#include "neurosim.hpp"
+#include "network.hpp"
 
 using namespace std;
 
 namespace neuro {
 
-ostream& operator<<(ostream& stream, Network& net) {
-	for (Network::iterator neuron = net.begin(); 
-			neuron != net.end(); ++neuron) {
-		if (neuron->getType() == INTERNAL)
+ostream& operator<<(ostream& stream, network& net) {
+	for (network::iterator n = net.begin(); n != net.end(); ++n) {
+		if (n->type() == INTERNAL) {
 			stream << "neuron";
-		else if (neuron->getType() == INPUT)
+		} else if (n->type() == INPUT) {
 			stream << "input";
-		else if (neuron->getType() == OUTPUT)
+		} else if (n->type() == OUTPUT) {
 			stream << "output";
-		stream << " " << neuron->getId() << endl;
-		if (neuron->getActivation() != 0.0)
-			stream << "\tactivation " << neuron->getActivation() << endl;
-		if (neuron->getBias() != 0.0)
-			stream << "\tbias " << neuron->getBias() <<endl;
-		for (Neuron::iterator synapse = neuron->begin();
-				synapse != neuron->end(); ++synapse)
-			stream << "synapse" << endl <<
-					"\tsource " << synapse->getSource().getId() << endl <<
-					"\ttarget " << synapse->getTarget().getId() << endl <<
-					"\tweight " << synapse->getWeight() << endl;
+		}
+		stream << " " << n->id() << endl;
+		if (n->activation() != 0.0) {
+			stream << "\tactivation " << n->activation() << endl;
+		}
+		if (n->bias() != 0.0) {
+			stream << "\tbias " << n->bias() << endl;
+		}
+		for (neuron::iterator s = n->begin(); s != n->end(); ++s) {
+			stream << "synapse" << endl << "\tsource " << s->source().id() << endl << 
+					"\tdestination " << s->destination().id() << endl << 
+					"\tweight " << s->weight() << endl;
+		}
 	}
 	return stream;
 }
 
-istream& operator>>(istream& stream, Network& net) {
+void parse_neuron(string& str_in, istream& stream, network& net) {
+	NeuronType type;
+	if (str_in == "neuron") {
+		type = INTERNAL;
+	} else if (str_in == "input") {
+		type = INPUT;
+	} else if (str_in == "output") {
+		type = OUTPUT;
+	}
+	int id;
+	stream >> id;
+	float activation = 0.0, bias = 0.0;
+	stream >> str_in;
+	while (!stream.eof() && (str_in == "activation" || str_in == "bias")) {
+		if (str_in == "activation") {
+			stream >> activation;
+		} else if (str_in == "bias") {
+			stream >> bias;
+		}
+		stream >> str_in;
+	}
+	if (net.contains(id)) {
+		ostringstream stream;
+		stream << "operator>>:: redefinition of <neuron id " << id << ", ...>";
+		throw runtime_error(stream.str());
+	}
+	net.add(id, type, activation, bias);
+}
+
+void parse_synapse(string& str_in, istream& stream, network& net) {
+	int source, destination;
+	float weight = 1.0;
+	stream >> str_in;
+	while (!stream.eof() && 
+			(str_in == "source" || str_in == "destination" || str_in == "weight")) {
+		if (str_in == "source") {
+			stream >> source;
+		} else if (str_in == "destination") {
+			stream >> destination;
+		} else if (str_in == "weight") {
+			stream >> weight;
+		}
+		stream >> str_in;
+	}
+	if (!net.contains(source)) {
+		ostringstream stream;
+		stream << "operator>>:: undefined source <neuron id " << source << ", ...>";
+		throw runtime_error(stream.str());
+	} else if (!net.contains(destination)) {
+		ostringstream stream;
+		stream << "operator>>:: undefined destination <neuron id " << destination << ", ...>";
+		throw runtime_error(stream.str());
+	}
+	net[source].connect(net[destination], weight);
+}
+
+istream& operator>>(istream& stream, network& net) {
 	net.clear();
 	string str_in;
 	stream >> str_in;
 	while (!stream.eof()) {
 		if (str_in == "neuron" || str_in == "input" || str_in == "output") {
-			NeuronType type;
-			if (str_in == "neuron")
-				type = INTERNAL;
-			else if (str_in == "input")
-				type = INPUT;
-			else if (str_in == "output")
-				type = OUTPUT;
-			int id;
-			stream >> id;
-			float activation = 0.0, bias = 0.0;
-			stream >> str_in;
-			while (!stream.eof() && 
-					(str_in == "activation" || str_in == "bias")) {
-				if (str_in == "activation")
-					stream >> activation;
-				else if (str_in == "bias")
-					stream >> bias;
-				stream >> str_in;
-			}
-			if (net.contains(id))
-				throw runtime_error("redefinition of id: " + to_string(id));
-			else
-				net.add(id, type, activation, bias);
+			parse_neuron(str_in, stream, net);
 		} else if (str_in == "synapse") {
-			int target, source;
-			float weight = 1.0;
-			stream >> str_in;
-			while (!stream.eof() && (str_in == "source" || 
-					str_in == "target" || str_in == "weight")) {
-				if (str_in == "source")
-					stream >> source;
-				else if (str_in == "target")
-					stream >> target;
-				else if (str_in == "weight")
-					stream >> weight;
-				stream >> str_in;
-			}
-			if (!net.contains(source))
-				throw runtime_error("undefined connection source: " + 
-						to_string(source));
-			else if (!net.contains(target))
-				throw runtime_error("undefined connection target: " + 
-						to_string(target));
-			else
-				net[source].connect(net[target], weight);
+			parse_synapse(str_in, stream, net);
 		} else
 			throw runtime_error("parse error on token: " + str_in); 
 	}
