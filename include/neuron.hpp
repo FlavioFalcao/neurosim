@@ -67,7 +67,7 @@ private:
 	iterable                        inputs_iterable_, outputs_iterable_;
 };
 
-inline std::string to_string(const neuron::connection_type& type) {
+inline std::string to_string(neuron::connection_type type) {
 	std::string text[] = {"INTERNAL", "INPUT", "OUTPUT"};
 	return text[type];
 }

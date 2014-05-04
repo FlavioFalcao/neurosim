@@ -31,9 +31,7 @@ void network::add(int id, neuron::connection_type type, float activation, float 
 			outputs_.push_back(n);
 		}
 	} else {
-		ostringstream stream;
-		stream << "network::add: <neuron id " << id << ", ...> already exists";
-		throw runtime_error(stream.str());
+		throw runtime_error("network::add: neuron with id = " + std::to_string(id) + " already exists");
 	}
 }
 
@@ -67,9 +65,8 @@ void network::erase(network::size_type id) {
 			outputs_.erase(n);
 		}
 	} else {
-		ostringstream stream;
-		stream << "network::erase: <neuron id " << id << ", ...> does not exist";
-		throw runtime_error(stream.str());
+		throw runtime_error("network::erase: neuron with id = " + 
+				std::to_string(id) + "does not exist");
 	}
 }
 

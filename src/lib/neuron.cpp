@@ -42,10 +42,9 @@ void neuron::connect(neuron& target, float weight) {
 			target.inputs_.push_back(s);
 			target.inputs_table_.insert(this->id(), s);
 		} else {
-			ostringstream stream;
-			stream << "neuron::connect: <neurons id " << this->id() << 
-					", ...> already connected to <neuron id " << target.id() << ", ...>";
-			throw runtime_error(stream.str());
+			throw runtime_error("neuron::connect: neuron with id = " + 
+					std::to_string(this->id()) + " already connected to neuron with id = " + 
+					std::to_string(target.id()));
 		}
 	} else {
 		throw runtime_error("neuron::connect: neuron::type == OUTPUT");
@@ -61,10 +60,9 @@ void neuron::disconnect(neuron& target) {
 			target.inputs_.erase(s);
 			target.inputs_table_.erase(this->id());
 		} else {
-			ostringstream stream;
-			stream << "neuron::disconnect: <neurons id " << this->id() << 
-					", ...> is not connected to <neuron id " << target.id() << ", ...>";
-			throw runtime_error(stream.str());
+			throw runtime_error("neuron::disconnect: neuron with id = " + 
+					std::to_string(this->id()) + " is not connected to neuron with id = " + 
+					std::to_string(target.id()));
 		}
 	} else
 		throw runtime_error("neuron::disconnect: neuron::type == OUTPUT");
@@ -97,8 +95,8 @@ bool neuron::operator!=(const neuron& n) const { return !(*this == n); }
 
 
 ostream& operator<<(ostream& stream, const neuron& neuron) {
-	return stream << "<neuron id " << neuron.id() << ", type " << to_string(neuron.type()) <<
-			", activation " << neuron.activation() << ", bias " << neuron.bias() << ">";
+	return stream << "neuron(id = " << neuron.id() << ", type = " << to_string(neuron.type()) <<
+			", activation = " << neuron.activation() << ", bias = " << neuron.bias() << ")";
 }
 
 neuron::iterable& neuron::outputs() { return outputs_iterable_; }

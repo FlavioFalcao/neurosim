@@ -60,9 +60,7 @@ void parse_neuron(string& str_in, istream& stream, network& net) {
 		stream >> str_in;
 	}
 	if (net.contains(id)) {
-		ostringstream stream;
-		stream << "operator>>:: redefinition of <neuron id " << id << ", ...>";
-		throw runtime_error(stream.str());
+		throw runtime_error("operator>>:: redefinition of neuron with id = " + std::to_string(id));
 	}
 	net.add(id, type, activation, bias);
 }
@@ -83,13 +81,11 @@ void parse_synapse(string& str_in, istream& stream, network& net) {
 		stream >> str_in;
 	}
 	if (!net.contains(source)) {
-		ostringstream stream;
-		stream << "operator>>:: undefined source <neuron id " << source << ", ...>";
-		throw runtime_error(stream.str());
+		throw runtime_error("operator>>:: undefined source - neuron with id =" + 
+				std::to_string(source));
 	} else if (!net.contains(destination)) {
-		ostringstream stream;
-		stream << "operator>>:: undefined destination <neuron id " << destination << ", ...>";
-		throw runtime_error(stream.str());
+		throw runtime_error("operator>>:: undefined destination - neuron with id =" + 
+				std::to_string(destination));
 	}
 	net[source].connect(net[destination], weight);
 }

@@ -48,8 +48,8 @@ bool synapse::operator!=(const synapse& s) const {
 }
 
 ostream& operator<<(ostream& stream, const synapse& synapse) {
-	return stream << "<synapse source.id " << synapse.source().id() << ", weight " << 
-			synapse.weight() << ", destination.id " << synapse.destination().id() << ">";
+	return stream << "synapse(source.id = " << synapse.source().id() << ", weight = " << 
+			synapse.weight() << ", destination.id = " << synapse.destination().id() << ")";
 }
 
 synapse::size_type synapse::size() const { return 2; }
