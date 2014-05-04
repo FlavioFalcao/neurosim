@@ -15,11 +15,11 @@ namespace neuro {
 
 ostream& operator<<(ostream& stream, network& net) {
 	for (network::iterator n = net.begin(); n != net.end(); ++n) {
-		if (n->type() == INTERNAL) {
+		if (n->type() == neuron::INTERNAL) {
 			stream << "neuron";
-		} else if (n->type() == INPUT) {
+		} else if (n->type() == neuron::INPUT) {
 			stream << "input";
-		} else if (n->type() == OUTPUT) {
+		} else if (n->type() == neuron::OUTPUT) {
 			stream << "output";
 		}
 		stream << " " << n->id() << endl;
@@ -39,13 +39,13 @@ ostream& operator<<(ostream& stream, network& net) {
 }
 
 void parse_neuron(string& str_in, istream& stream, network& net) {
-	NeuronType type;
+	neuron::connection_type type;
 	if (str_in == "neuron") {
-		type = INTERNAL;
+		type = neuron::INTERNAL;
 	} else if (str_in == "input") {
-		type = INPUT;
+		type = neuron::INPUT;
 	} else if (str_in == "output") {
-		type = OUTPUT;
+		type = neuron::OUTPUT;
 	}
 	int id;
 	stream >> id;

@@ -7,14 +7,14 @@
 #include <stdexcept>
 
 #include "neuron.hpp"
-#include "synapse.hpp"
 
 using namespace std;
 
 namespace neuro {
 
-neuron::neuron(int id, NeuronType type, float activation, float bias) : 
-		id_(id), type_(type), activation_(activation), bias_(bias) {}
+neuron::neuron(int id, neuron::connection_type type, float activation, float bias) : 
+		id_(id), type_(type), activation_(activation), bias_(bias), 
+		inputs_iterable_(inputs_), outputs_iterable_(outputs_) {}
 
 float neuron::activation() const { return activation_; }
 
@@ -28,7 +28,7 @@ void neuron::activation(float activation) {
 
 float neuron::bias() const { return bias_; }
 
-neuron::iterator neuron::begin() { return inputs_.begin(); }
+neuron::iterator neuron::begin() { return inputs().begin(); }
 
 void neuron::connect(neuron& target, float weight) {
 	if (type() != OUTPUT) {
@@ -81,25 +81,30 @@ float neuron::eval() {
 	return activation_;
 }
 
-neuron::iterator neuron::end() { return inputs_.end(); }
+neuron::iterator neuron::end() { return inputs().end(); }
 
 int neuron::id() const { return id_; }
 
-neuron::reference neuron::operator[](neuron::size_type n) { return inputs_[n]; }
-neuron::const_reference neuron::operator[](neuron::size_type n) const { return inputs_[n]; }
+neuron::iterable& neuron::inputs() { return inputs_iterable_; }
+const neuron::iterable& neuron::inputs() const { return inputs_iterable_; }
+
+// TODO implement correct indexing by source/destination id
+//neuron::reference neuron::operator[](neuron::size_type n) { return inputs_[n]; }
+//neuron::const_reference neuron::operator[](neuron::size_type n) const { return inputs_[n]; }
 
 bool neuron::operator==(const neuron& n) const { return id() == n.id(); }
 bool neuron::operator!=(const neuron& n) const { return !(*this == n); }
 
+
 ostream& operator<<(ostream& stream, const neuron& neuron) {
-	return stream << "<neuron id " << neuron.id() << ", type " << getNeuronTypeText(neuron.type()) <<
+	return stream << "<neuron id " << neuron.id() << ", type " << to_string(neuron.type()) <<
 			", activation " << neuron.activation() << ", bias " << neuron.bias() << ">";
 }
 
-neuron::iterator neuron::outputs_begin() { return outputs_.begin(); }
-neuron::iterator neuron::outputs_end() { return outputs_.end(); }
+neuron::iterable& neuron::outputs() { return outputs_iterable_; }
+const neuron::iterable& neuron::outputs() const { return outputs_iterable_; }
 
-neuron::size_type neuron::size() const { return inputs_.size(); }
+neuron::size_type neuron::size() const { return inputs().size(); }
 
 string neuron::to_string() const {
 	ostringstream stream;
@@ -107,7 +112,7 @@ string neuron::to_string() const {
 	return stream.str();
 }
 
-NeuronType neuron::type() const { return type_; }
+neuron::connection_type neuron::type() const { return type_; }
 
 }
 

@@ -9,32 +9,30 @@
 #include <ostream>
 #include <string>
 
-#include "container.hpp"
 #include "synapse.hpp"
+#include "util/iterable_wrapper.hpp"
+#include "util/shared_ptr_map.hpp"
+#include "util/shared_ptr_vector.hpp"
 
 namespace neuro {
-
-enum NeuronType {
-	INTERNAL = 0,
-	INPUT    = 1,
-	OUTPUT   = 2
-};
-
-inline std::string getNeuronTypeText(const NeuronType& type) {
-	std::string text[] = {"INTERNAL", "INPUT", "OUTPUT"};
-	return text[type];
-}
 
 class neuron {
 friend std::ostream& operator<<(std::ostream&, const neuron&);
 public:
-	typedef const synapse&                       const_reference;
-	typedef shared_ptr_vector<synapse>::iterator iterator;
-	typedef synapse&                             reference;
-	typedef unsigned int                         size_type;
-	typedef synapse                              value_type;
+	typedef const synapse&                               const_reference;
+	typedef iterable_wrapper<shared_ptr_vector<synapse>> iterable;
+	typedef shared_ptr_vector<synapse>::iterator         iterator;
+	typedef synapse&                                     reference;
+	typedef unsigned int                                 size_type;
+	typedef synapse                                      value_type;
 	
-	neuron(int, NeuronType = INTERNAL, float = 0.0, float = 0.0);
+	enum connection_type {
+		INTERNAL = 0,
+		INPUT    = 1,
+		OUTPUT   = 2
+	};
+	
+	neuron(int, connection_type = INTERNAL, float = 0.0, float = 0.0);
 	
 	float           activation() const;
 	void            activation(float);
@@ -45,23 +43,34 @@ public:
 	float           eval();
 	iterator        end();
 	int             id() const;
-	reference       operator[](size_type);
-	const_reference operator[](size_type) const;
+	iterable&       inputs();
+	const iterable& inputs() const;
+	
+	// TODO implement correct indexing by source/destination id
+	//reference       operator[](size_type);
+	//const_reference operator[](size_type) const;
+	
 	bool            operator==(const neuron&) const;
 	bool            operator!=(const neuron&) const;
-	iterator        outputs_begin();
-	iterator        outputs_end();
+	iterable&       outputs();
+	const iterable& outputs() const;
 	size_type       size() const;
 	std::string     to_string() const;
-	NeuronType      type() const;
+	connection_type type() const;
 	
 private:
 	int                             id_;
-	NeuronType                      type_;
+	connection_type                 type_;
 	float                           activation_, bias_;
 	shared_ptr_vector<value_type>   inputs_, outputs_;
 	shared_ptr_map<int, value_type> inputs_table_, outputs_table_;
+	iterable                        inputs_iterable_, outputs_iterable_;
 };
+
+inline std::string to_string(const neuron::connection_type& type) {
+	std::string text[] = {"INTERNAL", "INPUT", "OUTPUT"};
+	return text[type];
+}
 
 }
 
